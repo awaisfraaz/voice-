@@ -3,7 +3,13 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const sherpa_onnx = require('sherpa-onnx-node');
+let sherpa_onnx = null;
+try {
+    sherpa_onnx = require('sherpa-onnx-node');
+} catch (err) {
+    console.warn('sherpa-onnx-node failed to load:', err.message);
+    console.warn('Voice enrollment/verification endpoints will be unavailable.');
+}
 const supabase = require('../supabaseClient');
 
 // ─────────────────────────────────────────────
@@ -50,6 +56,11 @@ let extractor = null;
 
 function getExtractor() {
     if (!extractor) {
+        if (!sherpa_onnx) {
+            throw new Error(
+                'sherpa-onnx-node is not available on this platform. Voice features are disabled.'
+            );
+        }
         if (!fs.existsSync(MODEL_PATH)) {
             throw new Error(
                 `Speaker recognition model not found at ${MODEL_PATH}. ` +
