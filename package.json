@@ -18,8 +18,7 @@
     "express": "^4.21.0",
     "multer": "^2.0.2",
     "nodemailer": "^8.0.1",
-    "sherpa-onnx-node": "^1.12.29",
-    "sherpa-onnx-win-x64": "^1.12.28"
+    "sherpa-onnx-node": "^1.12.29"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
