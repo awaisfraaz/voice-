@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const app = express();
 
-// CORS configuration for Vercel
+// CORS configuration
 app.use(cors({
     origin: '*', // Change this to your frontend URL in production
     methods: ['GET', 'POST', 'PUT', 'DELETE']
@@ -25,14 +25,9 @@ app.use('/ring', ringroute);
 app.use('/email', emailroute);
 app.use('/voice', voiceroute);
 
-// For Vercel serverless functions
-const PORT = process.env.PORT || 5000;
+// Start server
+const PORT = process.env.PORT || 3000;
 
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, function () {
-        console.log('Server is running on port ' + PORT);
-    });
-}
-
-// Export for Vercel
-module.exports = app;
+app.listen(PORT, '0.0.0.0', function () {
+    console.log('Server is running on port ' + PORT);
+});
