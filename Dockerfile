@@ -37,6 +37,7 @@ COPY server.js ./
 COPY supabaseClient.js ./
 COPY routes/ ./routes/
 COPY models/ ./models/
+COPY utilis/ ./utilis/
 
 # Create upload directory in /tmp (writable on all cloud platforms)
 RUN mkdir -p /tmp/uploads/voice
