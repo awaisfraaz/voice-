@@ -17,7 +17,12 @@ const supabase = require('../supabaseClient');
 // ─────────────────────────────────────────────
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const dir = path.join(__dirname, '..', 'uploads', 'voice');
+        // Use /tmp in production (cloud platforms have writable /tmp)
+        // Fall back to local uploads/ for development
+        const baseDir = process.env.NODE_ENV === 'production'
+            ? '/tmp'
+            : path.join(__dirname, '..');
+        const dir = path.join(baseDir, 'uploads', 'voice');
         // create folder if it doesn't exist yet
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
