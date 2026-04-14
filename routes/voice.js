@@ -17,8 +17,7 @@ const supabase = require('../supabaseClient');
 // ─────────────────────────────────────────────
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        // Use /tmp in production (cloud platforms have writable /tmp)
-        // Fall back to local uploads/ for development
+
         const baseDir = process.env.NODE_ENV === 'production'
             ? '/tmp'
             : path.join(__dirname, '..');
@@ -194,7 +193,8 @@ router.post('/enroll', upload.single('audioFile'), async (req, res) => {
                     speaker_name: speakerName,
                     embedding: embeddingArray,
                     enrollment_count: 1,
-                    is_enrolled: false    // not enrolled until 3 samples
+                    is_enrolled: false,   // not enrolled until 3 samples
+                    is_enabled: true      // voice auth enabled by default
                 })
                 .select();
 
@@ -288,7 +288,7 @@ router.post('/verify', upload.single('audioFile'), async (req, res) => {
         // ── 2. Load stored profile from Supabase ───
         const { data: profile, error: fetchError } = await supabase
             .from('voice_profiles')
-            .select('embedding, is_enrolled, speaker_name')
+            .select('embedding, is_enrolled, is_enabled, speaker_name')
             .eq('user_id', userId)
             .maybeSingle();
 
@@ -299,6 +299,13 @@ router.post('/verify', upload.single('audioFile'), async (req, res) => {
 
         if (!profile) {
             return res.status(404).json({ error: 'No voice profile found for this userId. Please enroll first.' });
+        }
+
+        if (profile.is_enabled === false) {
+            return res.status(403).json({
+                error: 'Voice authentication is disabled for this account.',
+                isEnabled: false
+            });
         }
 
         if (!profile.is_enrolled) {
@@ -344,6 +351,82 @@ router.post('/verify', upload.single('audioFile'), async (req, res) => {
         console.error('Verification error:', err);
         res.status(500).json({
             error: 'Voice verification failed',
+            details: err.message
+        });
+    }
+});
+
+// ─────────────────────────────────────────────
+// disable
+router.put('/disable/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { data, error } = await supabase
+            .from('voice_profiles')
+            .update({ is_enabled: false })
+            .eq('user_id', userId)
+            .select();
+        if (error) {
+            console.error('Supabase update error:', error);
+            return res.status(500).json({ error: 'Failed to disable voice profile' });
+        }
+        res.status(200).json({
+            msg: 'Voice profile disabled successfully',
+        });
+    } catch (err) {
+        console.error('Disable error:', err);
+        res.status(500).json({
+            error: 'Voice disabling failed',
+            details: err.message
+        });
+    }
+});
+router.put('/enable/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { data, error } = await supabase
+            .from('voice_profiles')
+            .update({ is_enabled: true })
+            .eq('user_id', userId)
+            .select();
+        if (error) {
+            console.error('Supabase update error:', error);
+            return res.status(500).json({ error: 'Failed to enable voice profile' });
+        }
+        res.status(200).json({
+            msg: 'Voice profile enabled successfully',
+        });
+    } catch (err) {
+        console.error('Enable error:', err);
+        res.status(500).json({
+            error: 'Voice enabling failed',
+            details: err.message
+        });
+    }
+});
+
+// ─────────────────────────────────────────────
+// DELETE /voice/delete/:userId
+// ─────────────────────────────────────────────
+router.delete('/delete/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { data, error } = await supabase
+            .from('voice_profiles')
+            .delete()
+            .eq('user_id', userId)
+            .select();
+        if (error) {
+            console.error('Supabase delete error:', error);
+            return res.status(500).json({ error: 'Failed to delete voice profile' });
+        }
+        res.status(200).json({
+            msg: 'Voice profile deleted successfully',
+        });
+    } catch (err) {
+        console.error('Delete error:', err);
+        res.status(500).json({
+            error: 'Voice deletion failed',
             details: err.message
         });
     }
