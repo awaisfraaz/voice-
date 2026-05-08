@@ -12,11 +12,9 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.93.1",
     "cors": "^2.8.5",
-    "csv-parser": "^3.2.0",
     "dotenv": "^17.2.3",
     "express": "^4.21.0",
     "multer": "^2.0.2",
-    "nodemailer": "^8.0.1",
     "sherpa-onnx-node": "^1.12.29"
   },
   "devDependencies": {
